@@ -11,7 +11,7 @@ docker compose exec app composer install
 docker compose exec app php artisan key:generate
 
 # 4) миграции + сиды
-docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan migrate:fresh --seed
 
 # 5) сгенерировать Swagger
 docker compose exec app php artisan l5-swagger:generate
