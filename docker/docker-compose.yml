@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: ./php
+    container_name: ${APP_CONTAINER_NAME:-catalog-app}
+    working_dir: /var/www/html
+    volumes:
+      - ../src:/var/www/html
+      - storage_data:/var/www/html/storage 
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: ${NGINX_CONTAINER_NAME:-catalog-nginx}
+    ports:
+      - "${NGINX_HTTP_PORT:-8080}:80"
+    volumes:
+      - ../src:/var/www/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  db:
+    image: ${POSTGIS_IMAGE:-postgis/postgis:16-3.4}
+    container_name: ${DB_CONTAINER_NAME:-catalog-pg}
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-catalog}
+      POSTGRES_USER: ${DB_USERNAME:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "${DB_PORT_OUT:-54321}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  storage_data: {}   
